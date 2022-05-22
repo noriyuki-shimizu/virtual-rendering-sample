@@ -33,8 +33,16 @@
 
                 // 現在表示される画面内に読み込むべきリスト要素を計算する
                 const calculateRenderingItems = () => {
-                    const main = document.getElementById('main');
-                    const itemStartNum = Math.abs(main.getBoundingClientRect().top) / CONTENT_HEIGHT;
+                    const mainTop = document.getElementById('main').getBoundingClientRect().top;
+
+                    if (mainTop > 0) {
+                        // 画面に表示できるコンテンツの数
+                        const itemScreenNum = Math.ceil((window.innerHeight - mainTop) / CONTENT_HEIGHT)
+                        return [...ITEMS].splice(0, itemScreenNum)
+                    }
+
+                    // getBoundingClientRect を参照するため Forced Synchronous Layout が起きる
+                    const itemStartNum = Math.abs(mainTop) / CONTENT_HEIGHT;
                     // 画面に表示できるコンテンツの数
                     const itemScreenNum = Math.ceil(window.innerHeight / CONTENT_HEIGHT)
 
