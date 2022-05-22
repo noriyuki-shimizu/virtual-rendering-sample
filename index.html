@@ -1,0 +1,113 @@
+<html lang="ja">
+    <head>
+        <style></style>
+    </head>
+    <body>
+        <main id="main"></main>
+        <script>
+            const CONTENT_HEIGHT = 60;
+            const ITEMS = [...Array(1000)].map((_, index) => ({
+                index,
+                imagePath: 'https://github.com/pokemon-picture-book/pokemon-api/blob/develop/pokemon-img/025/xy/025-1.gif?raw=true',
+                text: 'ピカチュウ' + index
+            }))
+
+            {
+                // スクリール領域の高さを計算する
+                const calculateScrollHeight = () => {
+                    return 1000 * CONTENT_HEIGHT;
+                }
+
+                const element = document.createElement('div');
+                element.id = 'scroll';
+
+                // スクロール領域全体の高さを設定する
+                element.style.height = calculateScrollHeight() + 'px';
+
+                // ドキュメントにスクロール領域を追加する
+                document.getElementById('main').appendChild(element);
+            }
+
+            {
+                const scrollElement = document.getElementById('scroll');
+
+                // 現在表示される画面内に読み込むべきリスト要素を計算する
+                const calculateRenderingItems = () => {
+                    const main = document.getElementById('main');
+                    const itemStartNum = Math.abs(main.getBoundingClientRect().top) / CONTENT_HEIGHT;
+                    // 画面に表示できるコンテンツの数
+                    const itemScreenNum = Math.ceil(window.innerHeight / CONTENT_HEIGHT)
+
+                    return [...ITEMS].splice(itemStartNum, itemScreenNum)
+                }
+                // 表示するDOM要素を生成する
+                const prepareContents = (index, item) => {
+                    const parentElement = document.createElement('div');
+                    parentElement.id = 'item_' + item.index;
+                    parentElement.className = 'item-record'
+                    parentElement.style.height = CONTENT_HEIGHT;
+
+                    const imgElement = document.createElement('img');
+                    imgElement.src = item.imagePath;
+                    imgElement.alt = item.text;
+                    imgElement.height = CONTENT_HEIGHT;
+                    imgElement.width = CONTENT_HEIGHT;
+
+                    const textElement = document.createElement('span');
+                    textElement.textContent = item.text;
+
+                    parentElement.appendChild(imgElement);
+                    parentElement.appendChild(textElement);
+
+                    return parentElement
+                }
+                // コンテンツの位置を算出
+                const calculatePosition = (index) => index * CONTENT_HEIGHT;
+                const rendering = () => {
+                    const items = calculateRenderingItems();
+
+                    for (let i = 0; i < items.length; i++) {
+                        if (!document.getElementById('item_' + items[i].index)) {
+                            const element = prepareContents(i, items[i]);
+
+                            // 絶対値を計算して指定
+                            element.style.top = calculatePosition(items[i].index) + 'px';
+                            element.style.position = 'absolute';
+
+                            // スクロール領域ないに追加する
+                            scrollElement.appendChild(element);
+                        }
+                    }
+
+                    // 含まれていないリストを非表示にする
+                    const itemIndexList = items.map(item => item.index)
+                    const excludeIndexItemIds = Array.from(document.getElementsByClassName('item-record'))
+                        .filter(element => {
+                            if (element) {
+                                const itemId = element.id.split('_').pop();
+                                return !itemIndexList.includes(Number(itemId))
+                            }
+                        })
+                        .map(element => element.id)
+                    for (let i = 0; i < excludeIndexItemIds.length; i++) {
+                        document.getElementById(excludeIndexItemIds[i]).remove();
+                    }
+                }
+
+                // 初回レンダリング
+                rendering();
+
+                let running = false;
+                document.addEventListener('scroll', () => {
+                    if (!running) {
+                        running = true;
+                        window.requestAnimationFrame(() => {
+                            running = false;
+                            rendering();
+                        })
+                    }
+                })
+            }
+        </script>
+    </body>
+</html>
