@@ -41,7 +41,6 @@
                         return [...ITEMS].splice(0, itemScreenNum)
                     }
 
-                    // getBoundingClientRect を参照するため Forced Synchronous Layout が起きる
                     const itemStartNum = Math.abs(mainTop) / CONTENT_HEIGHT;
                     // 画面に表示できるコンテンツの数
                     const itemScreenNum = Math.ceil(window.innerHeight / CONTENT_HEIGHT)
@@ -50,28 +49,32 @@
                 }
                 // 表示するDOM要素を生成する
                 const prepareContents = (index, item) => {
-                    const parentElement = document.createElement('div');
-                    parentElement.id = 'item_' + item.index;
-                    parentElement.className = 'item-record'
-                    parentElement.style.height = CONTENT_HEIGHT;
+                    const fragment = document.createDocumentFragment();
+
+                    const element = document.createElement('div');
+                    element.id = 'item_' + item.index;
+                    element.className = 'item-record'
+                    element.style.height = CONTENT_HEIGHT;
 
                     const imgElement = document.createElement('img');
                     imgElement.src = item.imagePath;
                     imgElement.alt = item.text;
                     imgElement.height = CONTENT_HEIGHT;
                     imgElement.width = CONTENT_HEIGHT;
+                    fragment.append(imgElement);
 
                     const textElement = document.createElement('span');
                     textElement.textContent = item.text;
+                    fragment.append(textElement);
 
-                    parentElement.appendChild(imgElement);
-                    parentElement.appendChild(textElement);
+                    element.appendChild(fragment);
 
-                    return parentElement
+                    return element
                 }
                 // コンテンツの位置を算出
                 const calculatePosition = (index) => index * CONTENT_HEIGHT;
                 const rendering = () => {
+                    const fragment = document.createDocumentFragment();
                     const items = calculateRenderingItems();
 
                     for (let i = 0; i < items.length; i++) {
@@ -83,9 +86,10 @@
                             element.style.position = 'absolute';
 
                             // スクロール領域ないに追加する
-                            scrollElement.appendChild(element);
+                            fragment.append(element);
                         }
                     }
+                    scrollElement.appendChild(fragment)
 
                     // 含まれていないリストを非表示にする
                     const itemIndexList = items.map(item => item.index)
@@ -103,7 +107,9 @@
                 }
 
                 // 初回レンダリング
-                rendering();
+                window.requestAnimationFrame(() => {
+                    rendering();
+                })
 
                 let running = false;
                 document.addEventListener('scroll', () => {
